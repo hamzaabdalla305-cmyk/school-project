@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+{% block title %}{% if form.instance.pk %}تعديل{% else %}إضافة{% endif %} طالب{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <h2>{% if form.instance.pk %}تعديل{% else %}إضافة{% endif %} طالب</h2>
+        <form method="post">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button type="submit" class="btn btn-primary">حفظ</button>
+            <a href="{% url 'student_list' %}" class="btn btn-secondary">إلغاء</a>
+        </form>
+    </div>
+</div>
+{% endblock %}
