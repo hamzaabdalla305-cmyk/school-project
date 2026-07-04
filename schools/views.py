@@ -1,5 +1,6 @@
 from rest_framework import viewsets
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.exceptions import PermissionDenied
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import login, logout
 from django.contrib.auth.forms import AuthenticationForm
@@ -64,6 +65,11 @@ def student_list(request):
 
 @login_required
 def student_create(request):
+    # منع الطلاب من الإضافة
+    if request.user.role == 'student':
+        messages.error(request, '⚠️ الطلاب ليس لديهم صلاحية لإضافة طلاب جدد.')
+        return redirect('student_list')
+    
     from .models import Tenant
     if request.method == 'POST':
         form = StudentForm(request.POST)
@@ -85,6 +91,11 @@ def student_create(request):
 
 @login_required
 def student_update(request, pk):
+    # منع الطلاب من التعديل
+    if request.user.role == 'student':
+        messages.error(request, '⚠️ الطلاب ليس لديهم صلاحية لتعديل البيانات.')
+        return redirect('student_list')
+    
     from .models import Tenant
     if request.user.tenant:
         student = get_object_or_404(Student, pk=pk, tenant=request.user.tenant)
@@ -103,6 +114,11 @@ def student_update(request, pk):
 
 @login_required
 def student_delete(request, pk):
+    # منع الطلاب من الحذف
+    if request.user.role == 'student':
+        messages.error(request, '⚠️ الطلاب ليس لديهم صلاحية لحذف البيانات.')
+        return redirect('student_list')
+    
     from .models import Tenant
     if request.user.tenant:
         student = get_object_or_404(Student, pk=pk, tenant=request.user.tenant)
@@ -150,7 +166,19 @@ class StudentViewSet(viewsets.ModelViewSet):
         return Student.objects.filter(tenant=user.tenant)
 
     def perform_create(self, serializer):
+        if self.request.user.role == 'student':
+            raise PermissionDenied("الطلاب ليس لديهم صلاحية للإضافة.")
         serializer.save(tenant=self.request.user.tenant)
+
+    def perform_update(self, serializer):
+        if self.request.user.role == 'student':
+            raise PermissionDenied("الطلاب ليس لديهم صلاحية للتعديل.")
+        serializer.save()
+
+    def perform_destroy(self, instance):
+        if self.request.user.role == 'student':
+            raise PermissionDenied("الطلاب ليس لديهم صلاحية للحذف.")
+        instance.delete()
 
 class SubjectViewSet(viewsets.ModelViewSet):
     serializer_class = SubjectSerializer
@@ -163,7 +191,19 @@ class SubjectViewSet(viewsets.ModelViewSet):
         return Subject.objects.filter(tenant=user.tenant)
 
     def perform_create(self, serializer):
+        if self.request.user.role == 'student':
+            raise PermissionDenied("الطلاب ليس لديهم صلاحية للإضافة.")
         serializer.save(tenant=self.request.user.tenant)
+
+    def perform_update(self, serializer):
+        if self.request.user.role == 'student':
+            raise PermissionDenied("الطلاب ليس لديهم صلاحية للتعديل.")
+        serializer.save()
+
+    def perform_destroy(self, instance):
+        if self.request.user.role == 'student':
+            raise PermissionDenied("الطلاب ليس لديهم صلاحية للحذف.")
+        instance.delete()
 
 class GradeViewSet(viewsets.ModelViewSet):
     serializer_class = GradeSerializer
@@ -176,4 +216,16 @@ class GradeViewSet(viewsets.ModelViewSet):
         return Grade.objects.filter(tenant=user.tenant)
 
     def perform_create(self, serializer):
+        if self.request.user.role == 'student':
+            raise PermissionDenied("الطلاب ليس لديهم صلاحية للإضافة.")
         serializer.save(tenant=self.request.user.tenant)
+
+    def perform_update(self, serializer):
+        if self.request.user.role == 'student':
+            raise PermissionDenied("الطلاب ليس لديهم صلاحية للتعديل.")
+        serializer.save()
+
+    def perform_destroy(self, instance):
+        if self.request.user.role == 'student':
+            raise PermissionDenied("الطلاب ليس لديهم صلاحية للحذف.")
+        instance.delete()
