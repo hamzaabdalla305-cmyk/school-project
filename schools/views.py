@@ -36,6 +36,10 @@ def signup_view(request):
     return render(request, 'signup.html', {'form': form})
 
 def login_view(request):
+    # إذا كان المستخدم مسجلاً بالفعل، أرسله إلى قائمة الطلاب
+    if request.user.is_authenticated:
+        return redirect('student_list')
+    
     if request.method == 'POST':
         form = AuthenticationForm(data=request.POST)
         if form.is_valid():

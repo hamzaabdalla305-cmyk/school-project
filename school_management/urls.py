@@ -1,17 +1,19 @@
 from django.contrib import admin
 from django.urls import path, include
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
-from schools import views as school_views  # استيراد دوال الواجهات
+from schools import views as school_views
 
 urlpatterns = [
     # --- واجهات المستخدم (UI) ---
-    path('', school_views.student_list, name='student_list'),
+    path('', school_views.login_view, name='home'),          # الصفحة الرئيسية = تسجيل الدخول
     path('login/', school_views.login_view, name='login'),
+    path('signup/', school_views.signup_view, name='signup'),
     path('logout/', school_views.logout_view, name='logout'),
+    path('students/', school_views.student_list, name='student_list'),  # أصبحت تحت /students/
     path('students/add/', school_views.student_create, name='student_create'),
     path('students/<int:pk>/edit/', school_views.student_update, name='student_update'),
     path('students/<int:pk>/delete/', school_views.student_delete, name='student_delete'),
-    path('signup/', school_views.signup_view, name='signup'),
+
     # --- لوحة الإدارة ---
     path('admin/', admin.site.urls),
 
