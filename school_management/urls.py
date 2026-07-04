@@ -11,7 +11,7 @@ urlpatterns = [
     path('students/add/', school_views.student_create, name='student_create'),
     path('students/<int:pk>/edit/', school_views.student_update, name='student_update'),
     path('students/<int:pk>/delete/', school_views.student_delete, name='student_delete'),
-
+    path('signup/', school_views.signup_view, name='signup'),
     # --- لوحة الإدارة ---
     path('admin/', admin.site.urls),
 

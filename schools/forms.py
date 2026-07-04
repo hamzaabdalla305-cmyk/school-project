@@ -1,12 +1,10 @@
 from django import forms
-from .models import Student
+from django.contrib.auth.forms import UserCreationForm
+from .models import User
 
-class StudentForm(forms.ModelForm):
+class CustomUserCreationForm(UserCreationForm):
+    role = forms.ChoiceField(choices=[('student', 'طالب'), ('teacher', 'مدرس')], label='الدور')
+
     class Meta:
-        model = Student
-        fields = ['name', 'email', 'student_id']
-        labels = {
-            'name': 'الاسم',
-            'email': 'البريد الإلكتروني',
-            'student_id': 'رقم الطالب',
-        }
+        model = User
+        fields = ['username', 'email', 'password1', 'password2', 'role']

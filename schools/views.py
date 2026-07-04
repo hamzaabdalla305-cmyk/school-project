@@ -11,11 +11,28 @@ from .serializers import (
     TenantSerializer, UserSerializer, StudentSerializer,
     SubjectSerializer, GradeSerializer
 )
-from .forms import StudentForm
+from .forms import StudentForm, CustomUserCreationForm
 
 # =============================================
 # دوال الواجهات الأمامية (UI Views)
 # =============================================
+
+def signup_view(request):
+    if request.method == 'POST':
+        form = CustomUserCreationForm(request.POST)
+        if form.is_valid():
+            user = form.save(commit=False)
+            from .models import Tenant
+            tenant = Tenant.objects.first()
+            if not tenant:
+                tenant = Tenant.objects.create(name='المدرسة الافتراضية', subdomain='default')
+            user.tenant = tenant
+            user.save()
+            messages.success(request, 'تم إنشاء الحساب بنجاح! يمكنك تسجيل الدخول الآن.')
+            return redirect('login')
+    else:
+        form = CustomUserCreationForm()
+    return render(request, 'signup.html', {'form': form})
 
 def login_view(request):
     if request.method == 'POST':
@@ -34,38 +51,31 @@ def logout_view(request):
 
 @login_required
 def student_list(request):
-    from .models import Tenant  # استيراد النموذج
-    # إذا كان المستخدم له Tenant، اعرض طلابه
+    from .models import Tenant
     if request.user.tenant:
         students = Student.objects.filter(tenant=request.user.tenant)
     else:
-        # إذا لم يكن للمستخدم Tenant، اعرض طلاب أول Tenant موجود (وهو mdar)
         first_tenant = Tenant.objects.first()
         if first_tenant:
             students = Student.objects.filter(tenant=first_tenant)
         else:
-            students = Student.objects.none()  # لو مافيش أي Tenant خالص
+            students = Student.objects.none()
     return render(request, 'student_list.html', {'students': students})
 
 @login_required
 def student_create(request):
-    from .models import Tenant  # استيراد النموذج عشان نستخدمه
+    from .models import Tenant
     if request.method == 'POST':
         form = StudentForm(request.POST)
         if form.is_valid():
             student = form.save(commit=False)
-            
-            # 1. لو المستخدم عنده Tenant، استخدمه
             if request.user.tenant:
                 student.tenant = request.user.tenant
             else:
-                # 2. لو ماعنده، خد أول Tenant موجود في قاعدة البيانات (وهو mdar)
                 tenant = Tenant.objects.first()
                 if not tenant:
-                    # 3. لو مافيش أي Tenant خالص، اعمل واحد جديد باسم "الافتراضي"
                     tenant = Tenant.objects.create(name='المدرسة الافتراضية', subdomain='default')
                 student.tenant = tenant
-            
             student.save()
             messages.success(request, 'تم إضافة الطالب بنجاح!')
             return redirect('student_list')
@@ -75,7 +85,12 @@ def student_create(request):
 
 @login_required
 def student_update(request, pk):
-    student = get_object_or_404(Student, pk=pk, tenant=request.user.tenant)
+    from .models import Tenant
+    if request.user.tenant:
+        student = get_object_or_404(Student, pk=pk, tenant=request.user.tenant)
+    else:
+        first_tenant = Tenant.objects.first()
+        student = get_object_or_404(Student, pk=pk, tenant=first_tenant)
     if request.method == 'POST':
         form = StudentForm(request.POST, instance=student)
         if form.is_valid():
@@ -88,7 +103,12 @@ def student_update(request, pk):
 
 @login_required
 def student_delete(request, pk):
-    student = get_object_or_404(Student, pk=pk, tenant=request.user.tenant)
+    from .models import Tenant
+    if request.user.tenant:
+        student = get_object_or_404(Student, pk=pk, tenant=request.user.tenant)
+    else:
+        first_tenant = Tenant.objects.first()
+        student = get_object_or_404(Student, pk=pk, tenant=first_tenant)
     if request.method == 'POST':
         student.delete()
         messages.success(request, 'تم حذف الطالب!')
